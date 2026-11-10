@@ -1,0 +1,158 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live AI Avatar Studio</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 25px 15px;
+  background: #101322;
+  color: white;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+h1 { color: #a78bfa; }
+
+.container {
+  max-width: 900px;
+  margin: 25px auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+  gap: 20px;
+}
+
+.panel {
+  background: #20263a;
+  padding: 20px;
+  border-radius: 15px;
+}
+
+.preview {
+  height: 300px;
+  background: #080b14;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+#avatar {
+  display: none;
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain;
+}
+
+video {
+  width: 100%;
+  max-height: 240px;
+  background: black;
+  border-radius: 10px;
+}
+
+input { max-width: 100%; margin: 15px; }
+
+button {
+  padding: 12px 18px;
+  margin: 8px;
+  background: #8b5cf6;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+}
+
+#status {
+  color: #c4b5fd;
+  margin: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>✨ Live AI Avatar Studio</h1>
+<p>Upload your portrait and activate your camera.</p>
+
+<div class="container">
+
+  <div class="panel">
+    <h2>Your Avatar</h2>
+    <div class="preview">
+      <img id="avatar" alt="Uploaded portrait">
+      <span id="placeholder">Upload your photo here</span>
+    </div>
+    <input type="file" id="photo" accept="image/*">
+  </div>
+
+  <div class="panel">
+    <h2>Camera Tracking</h2>
+    <video id="camera" autoplay playsinline muted></video>
+    <br>
+    <button id="start">Start Camera</button>
+    <button id="stop">Stop Camera</button>
+  </div>
+
+</div>
+
+<p id="status">Welcome! Upload a photo to begin.</p>
+
+<script>
+const camera = document.getElementById("camera");
+const avatar = document.getElementById("avatar");
+const status = document.getElementById("status");
+
+let stream = null;
+
+document.getElementById("photo").onchange = function(event) {
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  if (avatar.src.startsWith("blob:")) {
+    URL.revokeObjectURL(avatar.src);
+  }
+
+  avatar.src = URL.createObjectURL(file);
+  avatar.style.display = "block";
+
+  document.getElementById("placeholder").style.display = "none";
+
+  status.textContent = "Portrait uploaded successfully!";
+};
+
+document.getElementById("start").onclick = async function() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 320, height: 240 },
+      audio: false
+    });
+
+    camera.srcObject = stream;
+    status.textContent = "Camera is running!";
+  } catch(error) {
+    status.textContent = "Camera error: " + error.message;
+  }
+};
+
+document.getElementById("stop").onclick = function() {
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+    stream = null;
+  }
+
+  camera.srcObject = null;
+  status.textContent = "Camera stopped.";
+};
+</script>
+
+</body>
+</html>
